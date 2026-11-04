@@ -1,0 +1,7 @@
+# Plantilla de ejemplo para el equipo (sin credenciales reales)
+db.host=tu_host_aqui.neon.tech
+db.port=5432
+db.name=neondb
+db.user=tu_usuario_aqui
+db.password=tu_password_aqui
+db.sslmode=require
