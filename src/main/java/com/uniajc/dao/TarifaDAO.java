@@ -2,49 +2,62 @@ package com.uniajc.dao;
 
 import com.uniajc.config.ConexionPostgresDatabase;
 import com.uniajc.modelo.Tarifa;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Acceso a datos de la tabla ares.tarifa.
+ * Las decisiones generales están explicadas en UsuarioDAO.
+ */
 public class TarifaDAO implements BaseDAO<Tarifa> {
 
     private static final String SCHEMA = "ares.";
 
     @Override
-    public boolean insertar(Tarifa tarifa) {
-        String sql = "INSERT INTO " + SCHEMA + "tarifa (transportadora_id, costo_base, valor_kilo_adicional) VALUES (?, ?, ?)";
+    public boolean insertar(Tarifa t) {
+        String sql = "INSERT INTO " + SCHEMA + "tarifa (id_transportadora, peso_min, peso_max, valor) VALUES (?, ?, ?, ?)";
         try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            pstmt.setInt(1, tarifa.getTransportadoraId());
-            pstmt.setDouble(2, tarifa.getCostoBase());
-            pstmt.setDouble(3, tarifa.getValorKiloAdicional());
+            ps.setInt(1, t.getIdTransportadora());
+            ps.setBigDecimal(2, t.getPesoMin());
+            ps.setBigDecimal(3, t.getPesoMax());
+            ps.setBigDecimal(4, t.getValor());
 
-            return pstmt.executeUpdate() > 0;
+            boolean insertado = ps.executeUpdate() > 0;
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    t.setId(keys.getInt("id_tarifa"));
+                }
+            }
+            return insertado;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw new RuntimeException("Error al insertar tarifa: " + e.getMessage(), e);
         }
     }
 
     @Override
-    public boolean actualizar(Tarifa tarifa) {
-        String sql = "UPDATE " + SCHEMA + "tarifa SET transportadora_id = ?, costo_base = ?, valor_kilo_adicional = ? WHERE id_tarifa = ?";
+    public boolean actualizar(Tarifa t) {
+        String sql = "UPDATE " + SCHEMA + "tarifa SET id_transportadora = ?, peso_min = ?, peso_max = ?, valor = ? "
+                   + "WHERE id_tarifa = ?";
         try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, tarifa.getTransportadoraId());
-            pstmt.setDouble(2, tarifa.getCostoBase());
-            pstmt.setDouble(3, tarifa.getValorKiloAdicional());
-            pstmt.setInt(4, tarifa.getId());
+            ps.setInt(1, t.getIdTransportadora());
+            ps.setBigDecimal(2, t.getPesoMin());
+            ps.setBigDecimal(3, t.getPesoMax());
+            ps.setBigDecimal(4, t.getValor());
+            ps.setInt(5, t.getId());
 
-            return pstmt.executeUpdate() > 0;
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw new RuntimeException("Error al actualizar tarifa: " + e.getMessage(), e);
         }
     }
 
@@ -52,13 +65,12 @@ public class TarifaDAO implements BaseDAO<Tarifa> {
     public boolean eliminar(int id) {
         String sql = "DELETE FROM " + SCHEMA + "tarifa WHERE id_tarifa = ?";
         try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, id);
-            return pstmt.executeUpdate() > 0;
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw new RuntimeException("Error al eliminar tarifa: " + e.getMessage(), e);
         }
     }
 
@@ -66,35 +78,18 @@ public class TarifaDAO implements BaseDAO<Tarifa> {
     public Tarifa buscarPorId(int id) {
         String sql = "SELECT * FROM " + SCHEMA + "tarifa WHERE id_tarifa = ?";
         try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, id);
-            try (ResultSet rs = pstmt.executeQuery()) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return mapearTarifa(rs);
                 }
             }
+            return null;
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error al buscar tarifa: " + e.getMessage(), e);
         }
-        return null;
-    }
-
-    public Tarifa obtenerPorTransportadoraId(int transportadoraId) {
-        String sql = "SELECT * FROM " + SCHEMA + "tarifa WHERE transportadora_id = ?";
-        try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, transportadoraId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapearTarifa(rs);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     @Override
@@ -102,24 +97,70 @@ public class TarifaDAO implements BaseDAO<Tarifa> {
         String sql = "SELECT * FROM " + SCHEMA + "tarifa ORDER BY id_tarifa ASC";
         List<Tarifa> lista = new ArrayList<>();
         try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 lista.add(mapearTarifa(rs));
             }
+            return lista;
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error al listar tarifas: " + e.getMessage(), e);
         }
-        return lista;
+    }
+
+    /** Todas las tarifas de un operador, ordenadas por peso. */
+    public List<Tarifa> listarPorTransportadora(int idTransportadora) {
+        String sql = "SELECT * FROM " + SCHEMA + "tarifa WHERE id_transportadora = ? ORDER BY peso_min ASC";
+        List<Tarifa> lista = new ArrayList<>();
+        try (Connection conn = ConexionPostgresDatabase.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, idTransportadora);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapearTarifa(rs));
+                }
+            }
+            return lista;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al listar tarifas de la transportadora: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Busca la tarifa que le corresponde a un peso: peso mínimo excluido y
+     * máximo incluido (5 kg cae en el rango 0-5). Devuelve null si ningún
+     * rango cubre ese peso. Sirve para calcular el costo de un envío.
+     */
+    public Tarifa buscarTarifaParaPeso(int idTransportadora, BigDecimal peso) {
+        String sql = "SELECT * FROM " + SCHEMA + "tarifa "
+                   + "WHERE id_transportadora = ? AND ? > peso_min AND ? <= peso_max "
+                   + "ORDER BY peso_min ASC LIMIT 1";
+        try (Connection conn = ConexionPostgresDatabase.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, idTransportadora);
+            ps.setBigDecimal(2, peso);
+            ps.setBigDecimal(3, peso);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapearTarifa(rs);
+                }
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al buscar tarifa por peso: " + e.getMessage(), e);
+        }
     }
 
     private Tarifa mapearTarifa(ResultSet rs) throws SQLException {
         Tarifa t = new Tarifa();
         t.setId(rs.getInt("id_tarifa"));
-        t.setTransportadoraId(rs.getInt("transportadora_id"));
-        t.setCostoBase(rs.getDouble("costo_base"));
-        t.setValorKiloAdicional(rs.getDouble("valor_kilo_adicional"));
+        t.setIdTransportadora(rs.getInt("id_transportadora"));
+        t.setPesoMin(rs.getBigDecimal("peso_min"));
+        t.setPesoMax(rs.getBigDecimal("peso_max"));
+        t.setValor(rs.getBigDecimal("valor"));
         return t;
     }
 }

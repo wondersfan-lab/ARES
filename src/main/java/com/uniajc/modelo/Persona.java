@@ -1,5 +1,6 @@
 package com.uniajc.modelo;
 
+
 public abstract class Persona {
     private int id;
     private String nombre;

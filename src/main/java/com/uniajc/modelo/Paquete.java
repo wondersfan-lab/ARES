@@ -1,34 +1,35 @@
 package com.uniajc.modelo;
 
+
 public class Paquete {
     private int id;
-    private int envioId;
-    private double pesoKg;
-    private double volumen;
+    private int idOperacion;
+    private String nombreProducto;
     private String descripcion;
+    private int cantidad = 1;
 
     public Paquete() {}
 
-    public Paquete(int id, int envioId, double pesoKg, double volumen, String descripcion) {
+    public Paquete(int id, int idOperacion, String nombreProducto, String descripcion, int cantidad) {
         this.id = id;
-        this.envioId = envioId;
-        this.pesoKg = pesoKg;
-        this.volumen = volumen;
+        this.idOperacion = idOperacion;
+        this.nombreProducto = nombreProducto;
         this.descripcion = descripcion;
+        this.cantidad = cantidad;
     }
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    public int getEnvioId() { return envioId; }
-    public void setEnvioId(int envioId) { this.envioId = envioId; }
+    public int getIdOperacion() { return idOperacion; }
+    public void setIdOperacion(int idOperacion) { this.idOperacion = idOperacion; }
 
-    public double getPesoKg() { return pesoKg; }
-    public void setPesoKg(double pesoKg) { this.pesoKg = pesoKg; }
-
-    public double getVolumen() { return volumen; }
-    public void setVolumen(double volumen) { this.volumen = volumen; }
+    public String getNombreProducto() { return nombreProducto; }
+    public void setNombreProducto(String nombreProducto) { this.nombreProducto = nombreProducto; }
 
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+
+    public int getCantidad() { return cantidad; }
+    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
 }
