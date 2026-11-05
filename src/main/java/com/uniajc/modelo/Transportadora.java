@@ -1,34 +1,63 @@
 package com.uniajc.modelo;
 
+/**
+ * Operador con el que trabaja el negocio (Mercado Libre, Envía, Coordinadora...).
+ * Corresponde a la tabla ares.transportadora.
+ *
+ * Decisión: tipoServicio indica qué operaciones hace el operador
+ * (solo envíos, solo recepciones o ambas). Se usan constantes en vez de
+ * escribir el texto a mano en cada lugar, para evitar errores de digitación.
+ */
 public class Transportadora {
+
+    public static final String SERVICIO_ENVIO = "ENVIO";
+    public static final String SERVICIO_RECEPCION = "RECEPCION";
+    public static final String SERVICIO_AMBOS = "AMBOS";
+
     private int id;
+    private String nombre;
     private String nit;
-    private String razonSocial;
-    private String telefono;
-    private boolean estadoActivo;
+    private String telefonoContacto;
+    private String direccion;
+    private String tipoServicio = SERVICIO_AMBOS;
+    private boolean activo = true;
 
     public Transportadora() {}
 
-    public Transportadora(int id, String nit, String razonSocial, String telefono, boolean estadoActivo) {
+    public Transportadora(int id, String nombre, String nit, String telefonoContacto,
+                          String direccion, String tipoServicio, boolean activo) {
         this.id = id;
+        this.nombre = nombre;
         this.nit = nit;
-        this.razonSocial = razonSocial;
-        this.telefono = telefono;
-        this.estadoActivo = estadoActivo;
+        this.telefonoContacto = telefonoContacto;
+        this.direccion = direccion;
+        this.tipoServicio = tipoServicio;
+        this.activo = activo;
     }
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
     public String getNit() { return nit; }
     public void setNit(String nit) { this.nit = nit; }
 
-    public String getRazonSocial() { return razonSocial; }
-    public void setRazonSocial(String razonSocial) { this.razonSocial = razonSocial; }
+    public String getTelefonoContacto() { return telefonoContacto; }
+    public void setTelefonoContacto(String telefonoContacto) { this.telefonoContacto = telefonoContacto; }
 
-    public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
+    public String getDireccion() { return direccion; }
+    public void setDireccion(String direccion) { this.direccion = direccion; }
 
-    public boolean isEstadoActivo() { return estadoActivo; }
-    public void setEstadoActivo(boolean estadoActivo) { this.estadoActivo = estadoActivo; }
+    public String getTipoServicio() { return tipoServicio; }
+    public void setTipoServicio(String tipoServicio) { this.tipoServicio = tipoServicio; }
+
+    public boolean isActivo() { return activo; }
+    public void setActivo(boolean activo) { this.activo = activo; }
+
+    @Override
+    public String toString() {
+        return "Transportadora{id=" + id + ", nombre='" + nombre + "', servicio='" + tipoServicio + "'}";
+    }
 }

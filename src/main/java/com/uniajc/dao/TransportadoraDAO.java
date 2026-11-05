@@ -6,47 +6,62 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Acceso a datos de la tabla ares.transportadora (los operadores).
+ * Las decisiones generales están explicadas en UsuarioDAO.
+ */
 public class TransportadoraDAO implements BaseDAO<Transportadora> {
 
     private static final String SCHEMA = "ares.";
 
     @Override
-    public boolean insertar(Transportadora transportadora) {
-        String sql = "INSERT INTO " + SCHEMA + "transportadora (nit, razon_social, telefono, estado_activo) VALUES (?, ?, ?, ?)";
+    public boolean insertar(Transportadora t) {
+        String sql = "INSERT INTO " + SCHEMA + "transportadora (nombre, nit, telefono_contacto, direccion, tipo_servicio, activo) "
+                   + "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            pstmt.setString(1, transportadora.getNit());
-            pstmt.setString(2, transportadora.getRazonSocial());
-            pstmt.setString(3, transportadora.getTelefono());
-            pstmt.setBoolean(4, transportadora.isEstadoActivo());
+            ps.setString(1, t.getNombre());
+            ps.setString(2, t.getNit());
+            ps.setString(3, t.getTelefonoContacto());
+            ps.setString(4, t.getDireccion());
+            ps.setString(5, t.getTipoServicio());
+            ps.setBoolean(6, t.isActivo());
 
-            return pstmt.executeUpdate() > 0;
+            boolean insertado = ps.executeUpdate() > 0;
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    t.setId(keys.getInt("id_transportadora"));
+                }
+            }
+            return insertado;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw new RuntimeException("Error al insertar transportadora: " + e.getMessage(), e);
         }
     }
 
     @Override
-    public boolean actualizar(Transportadora transportadora) {
-        String sql = "UPDATE " + SCHEMA + "transportadora SET nit = ?, razon_social = ?, telefono = ?, estado_activo = ? WHERE id_transportadora = ?";
+    public boolean actualizar(Transportadora t) {
+        String sql = "UPDATE " + SCHEMA + "transportadora SET nombre = ?, nit = ?, telefono_contacto = ?, "
+                   + "direccion = ?, tipo_servicio = ?, activo = ? WHERE id_transportadora = ?";
         try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, transportadora.getNit());
-            pstmt.setString(2, transportadora.getRazonSocial());
-            pstmt.setString(3, transportadora.getTelefono());
-            pstmt.setBoolean(4, transportadora.isEstadoActivo());
-            pstmt.setInt(5, transportadora.getId());
+            ps.setString(1, t.getNombre());
+            ps.setString(2, t.getNit());
+            ps.setString(3, t.getTelefonoContacto());
+            ps.setString(4, t.getDireccion());
+            ps.setString(5, t.getTipoServicio());
+            ps.setBoolean(6, t.isActivo());
+            ps.setInt(7, t.getId());
 
-            return pstmt.executeUpdate() > 0;
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw new RuntimeException("Error al actualizar transportadora: " + e.getMessage(), e);
         }
     }
 
@@ -54,13 +69,13 @@ public class TransportadoraDAO implements BaseDAO<Transportadora> {
     public boolean eliminar(int id) {
         String sql = "DELETE FROM " + SCHEMA + "transportadora WHERE id_transportadora = ?";
         try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, id);
-            return pstmt.executeUpdate() > 0;
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            // Falla si ya tiene operaciones registradas: en ese caso conviene desactivarla (activo = false).
+            throw new RuntimeException("Error al eliminar transportadora: " + e.getMessage(), e);
         }
     }
 
@@ -68,18 +83,36 @@ public class TransportadoraDAO implements BaseDAO<Transportadora> {
     public Transportadora buscarPorId(int id) {
         String sql = "SELECT * FROM " + SCHEMA + "transportadora WHERE id_transportadora = ?";
         try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, id);
-            try (ResultSet rs = pstmt.executeQuery()) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return mapearTransportadora(rs);
                 }
             }
+            return null;
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error al buscar transportadora: " + e.getMessage(), e);
         }
-        return null;
+    }
+
+    /** Busca un operador por su nombre exacto (por ejemplo "Coordinadora"). */
+    public Transportadora buscarPorNombre(String nombre) {
+        String sql = "SELECT * FROM " + SCHEMA + "transportadora WHERE nombre = ?";
+        try (Connection conn = ConexionPostgresDatabase.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, nombre);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapearTransportadora(rs);
+                }
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al buscar transportadora por nombre: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -87,25 +120,27 @@ public class TransportadoraDAO implements BaseDAO<Transportadora> {
         String sql = "SELECT * FROM " + SCHEMA + "transportadora ORDER BY id_transportadora ASC";
         List<Transportadora> lista = new ArrayList<>();
         try (Connection conn = ConexionPostgresDatabase.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 lista.add(mapearTransportadora(rs));
             }
+            return lista;
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error al listar transportadoras: " + e.getMessage(), e);
         }
-        return lista;
     }
 
     private Transportadora mapearTransportadora(ResultSet rs) throws SQLException {
         Transportadora t = new Transportadora();
         t.setId(rs.getInt("id_transportadora"));
+        t.setNombre(rs.getString("nombre"));
         t.setNit(rs.getString("nit"));
-        t.setRazonSocial(rs.getString("razon_social"));
-        t.setTelefono(rs.getString("telefono"));
-        t.setEstadoActivo(rs.getBoolean("estado_activo"));
+        t.setTelefonoContacto(rs.getString("telefono_contacto"));
+        t.setDireccion(rs.getString("direccion"));
+        t.setTipoServicio(rs.getString("tipo_servicio"));
+        t.setActivo(rs.getBoolean("activo"));
         return t;
     }
 }
