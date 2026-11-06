@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane prefHeight="820.0" prefWidth="1280.0" stylesheets="@estilos.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.uniajc.controlador.PrincipalController">
+
+    <!-- TOP: Barra de Título -->
+    <top>
+        <HBox fx:id="barraTitulo" alignment="CENTER_LEFT" spacing="15.0" styleClass="top-bar">
+            <HBox alignment="CENTER" style="-fx-background-color: -ares-green-main; -fx-background-radius: 6; -fx-padding: 4 6;">
+                <FontIcon iconLiteral="fas-box" iconSize="14" style="-fx-icon-color: black;"/>
+            </HBox>
+            <Label style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px;" text="ARES Logistics System" />
+            <Label styleClass="texto-mono" text="v1.0.0-JavaFX" style="-fx-background-color: #242424; -fx-padding: 3 8; -fx-background-radius: 4;" />
+
+            <Pane HBox.hgrow="ALWAYS" />
+
+            <Label text="● PostgreSQL (Neon Cloud: neondb)" style="-fx-text-fill: #1DB954; -fx-background-color: #0F2E1B; -fx-padding: 5 15; -fx-background-radius: 500; -fx-font-size: 12px; -fx-font-weight: bold;" />
+
+            <Pane HBox.hgrow="ALWAYS" />
+
+            <HBox spacing="5.0">
+                <Button onAction="#minimizarVentana" styleClass="btn-window" text="—" />
+                <Button onAction="#cerrarAplicacion" styleClass="btn-window, btn-close" text="X" />
+            </HBox>
+        </HBox>
+    </top>
+
+    <!-- LEFT: Menú Lateral -->
+    <left>
+        <VBox spacing="10.0" styleClass="sidebar" prefWidth="260.0" BorderPane.alignment="CENTER">
+            <padding><Insets top="20.0" right="15.0" bottom="20.0" left="15.0"/></padding>
+
+            <!-- Perfil Usuario -->
+            <HBox alignment="CENTER_LEFT" spacing="12.0" style="-fx-background-color: transparent; -fx-padding: 0 0 10 0;">
+                <VBox fx:id="boxAvatar" alignment="CENTER" style="-fx-background-color: #1DB954; -fx-background-radius: 500; -fx-min-width: 40; -fx-min-height: 40;">
+                    <Label fx:id="lblInicialesUsuario" text="--" style="-fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px;" />
+                </VBox>
+                <VBox spacing="2">
+                    <Label fx:id="lblNombreUsuario" text="Cargando..." style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;" />
+                    <Label fx:id="lblRolUsuario" text="Cargando" style="-fx-text-fill: #1DB954; -fx-background-color: #0F2E1B; -fx-padding: 2 6; -fx-background-radius: 12; -fx-font-size: 10px;" />
+                </VBox>
+            </HBox>
+
+            <Label text="OPERACIONES" style="-fx-text-fill: #727272; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 10 0 5 0;" />
+
+            <Button fx:id="btnNavPrincipal" maxWidth="Infinity" styleClass="nav-btn, nav-btn-active" text=" Panel Principal" onAction="#mostrarVistaPrincipal">
+                <graphic><FontIcon iconLiteral="fas-chart-pie" iconSize="14" styleClass="nav-icon"/></graphic>
+            </Button>
+
+            <HBox alignment="CENTER_LEFT">
+                <Button fx:id="btnNavEnvios" maxWidth="Infinity" styleClass="nav-btn" text=" Gestión de Envíos" onAction="#mostrarVistaEnvios" HBox.hgrow="ALWAYS">
+                    <graphic><FontIcon iconLiteral="fas-truck" iconSize="14" styleClass="nav-icon"/></graphic>
+                </Button>
+                <Label fx:id="lblBadgeEnvios" text="0" style="-fx-background-color: #242424; -fx-text-fill: #B3B3B3; -fx-padding: 2 6; -fx-background-radius: 4; -fx-font-size: 10px;" />
+            </HBox>
+
+            <Button fx:id="btnNavPaquetes" maxWidth="Infinity" styleClass="nav-btn" text=" Paquetes y Guías" onAction="#mostrarVistaPaquetes">
+                <graphic><FontIcon iconLiteral="fas-box-open" iconSize="14" styleClass="nav-icon"/></graphic>
+            </Button>
+
+            <Button fx:id="btnNavRecepcion" maxWidth="Infinity" styleClass="nav-btn" text=" Recepción y Entrega" onAction="#mostrarVistaRecepcion">
+                <graphic><FontIcon iconLiteral="fas-clipboard-check" iconSize="14" styleClass="nav-icon"/></graphic>
+            </Button>
+
+            <Label fx:id="lblEtiquetaConfiguracion" text="CONFIGURACIÓN ARES" style="-fx-text-fill: #727272; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 15 0 5 0;" />
+
+            <Button fx:id="btnNavTarifas" maxWidth="Infinity" styleClass="nav-btn" text=" Transportadoras &amp; Tarifas" onAction="#mostrarVistaTarifas">
+                <graphic><FontIcon iconLiteral="fas-building" iconSize="14" styleClass="nav-icon"/></graphic>
+            </Button>
+
+            <Button fx:id="btnNavUsuarios" maxWidth="Infinity" styleClass="nav-btn" text=" Gestión de Usuarios" onAction="#mostrarVistaUsuarios">
+                <graphic><FontIcon iconLiteral="fas-users" iconSize="14" styleClass="nav-icon"/></graphic>
+            </Button>
+
+            <Pane VBox.vgrow="ALWAYS" />
+
+            <Button maxWidth="Infinity" styleClass="btn-danger-outline" text=" Cerrar Sesión" onAction="#cerrarSesion" style="-fx-padding: 10;">
+                <graphic><FontIcon iconLiteral="fas-sign-out-alt" iconSize="14" style="-fx-icon-color: #E22134;"/></graphic>
+            </Button>
+        </VBox>
+    </left>
+
+    <!-- CENTER: Contenedor Principal -->
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background: transparent; -fx-border-color: transparent;">
+            <StackPane fx:id="stackPantallas" style="-fx-background-color: transparent; -fx-padding: 30;">
+
+                <!-- =====================================================
+                     1. PANEL PRINCIPAL
+                     ===================================================== -->
+                <VBox fx:id="vistaPrincipal" spacing="25.0">
+
+                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                        <VBox HBox.hgrow="ALWAYS" spacing="2">
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Label text="Centro de Control Operativo" style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;" />
+                                <Label text="{ARES Logistics}" style="-fx-text-fill: #727272; -fx-font-size: 14px;" />
+                            </HBox>
+                            <Label text="Resumen en tiempo real conectado al esquema ares en PostgreSQL." style="-fx-text-fill: #B3B3B3; -fx-font-size: 13px;" />
+                        </VBox>
+                        <Button styleClass="btn-secondary" text="Actualizar" onAction="#cargarDatosDesdeDAO" />
+                        <Button styleClass="btn-primary" text="+ Crear Nuevo Envío" onAction="#mostrarVistaEnvios" />
+                    </HBox>
+
+                    <!-- KPIs -->
+                    <HBox spacing="15.0">
+                        <HBox styleClass="kpi-card" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                            <VBox HBox.hgrow="ALWAYS" spacing="5">
+                                <Label styleClass="kpi-title" text="OPERACIONES ACTIVAS" />
+                                <Label fx:id="lblTotalEnviosHoy" styleClass="kpi-value" text="0" />
+                                <Label text="↗ Registradas en BD" style="-fx-text-fill: #1DB954; -fx-font-size: 11px;" />
+                            </VBox>
+                            <VBox styleClass="kpi-icon-box" style="-fx-background-color: #10233A;">
+                                <FontIcon iconLiteral="fas-truck-moving" iconSize="20" style="-fx-icon-color: #0EA5E9;"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox styleClass="kpi-card" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                            <VBox HBox.hgrow="ALWAYS" spacing="5">
+                                <Label styleClass="kpi-title" text="PAQUETES EN BODEGA" />
+                                <Label fx:id="lblTotalPaquetes" styleClass="kpi-value" text="0" />
+                                <Label text="🟡 Registrados" style="-fx-text-fill: #F59B23; -fx-font-size: 11px;" />
+                            </VBox>
+                            <VBox styleClass="kpi-icon-box" style="-fx-background-color: #33240A;">
+                                <FontIcon iconLiteral="fas-pallet" iconSize="20" style="-fx-icon-color: #F59B23;"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox styleClass="kpi-card" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                            <VBox HBox.hgrow="ALWAYS" spacing="5">
+                                <Label styleClass="kpi-title" text="TRANSPORTADORAS" />
+                                <Label fx:id="lblTotalTransportadoras" styleClass="kpi-value" text="0 Activas" style="-fx-font-size: 22px;" />
+                                <Label text="Operadores aliados" style="-fx-text-fill: #727272; -fx-font-size: 11px;" />
+                            </VBox>
+                            <VBox styleClass="kpi-icon-box" style="-fx-background-color: #10233A;">
+                                <FontIcon iconLiteral="fas-handshake" iconSize="20" style="-fx-icon-color: #0EA5E9;"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox styleClass="kpi-card" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                            <VBox HBox.hgrow="ALWAYS" spacing="5">
+                                <Label styleClass="kpi-title" text="INGRESOS TOTALES" />
+                                <Label fx:id="lblIngresosTotales" styleClass="kpi-value" text="0" style="-fx-text-fill: #1DB954;" />
+                                <Label text="✓ Ingresos acumulados" style="-fx-text-fill: #1DB954; -fx-font-size: 11px;" />
+                            </VBox>
+                            <VBox styleClass="kpi-icon-box" style="-fx-background-color: #0F2E1B;">
+                                <FontIcon iconLiteral="fas-check-circle" iconSize="20" style="-fx-icon-color: #1DB954;"/>
+                            </VBox>
+                        </HBox>
+                    </HBox>
+
+                    <!-- Tabla Principal -->
+                    <VBox spacing="15" VBox.vgrow="ALWAYS" styleClass="panel-card">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <FontIcon iconLiteral="fas-list-alt" iconSize="14" style="-fx-icon-color: #1DB954;"/>
+                            <Label text="ÚLTIMAS OPERACIONES REGISTRADAS" style="-fx-text-fill: white; -fx-font-size: 12px; -fx-font-weight: bold;" />
+                            <Pane HBox.hgrow="ALWAYS" />
+                            <Label text="Conectado a PostgreSQL" style="-fx-text-fill: #727272; -fx-font-size: 11px;" />
+                        </HBox>
+
+                        <TableView fx:id="tblOperaciones" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colId" text="ID" prefWidth="60.0" />
+                                <TableColumn fx:id="colCodigoSeguimiento" text="GUÍA" prefWidth="150.0" />
+                                <TableColumn fx:id="colTipoOperacion" text="TIPO" prefWidth="120.0" />
+                                <TableColumn fx:id="colRemitente" text="REMITENTE" prefWidth="180.0" />
+                                <TableColumn fx:id="colDestinatario" text="DESTINATARIO" prefWidth="180.0" />
+                                <TableColumn fx:id="colEstado" text="ESTADO" prefWidth="130.0" />
+                                <TableColumn fx:id="colCostoTotal" text="COSTO TOTAL" prefWidth="140.0" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </VBox>
+
+                <!-- =====================================================
+                     2. GESTIÓN DE ENVÍOS
+                     ===================================================== -->
+                <VBox fx:id="vistaEnvios" visible="false" managed="false" spacing="20.0">
+                    <Label text="Gestión de Envíos" style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;" />
+
+                    <VBox spacing="12.0" styleClass="form-card">
+                        <Label text="Registrar Nuevo Envío" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;" />
+                        <HBox spacing="12.0">
+                            <ComboBox fx:id="cmbEnvioTransportadora" promptText="Transportadora" prefWidth="220.0" />
+                            <TextField fx:id="txtEnvioGuia" promptText="Número de Guía" HBox.hgrow="ALWAYS" />
+                            <TextField fx:id="txtEnvioRemitente" promptText="Remitente" HBox.hgrow="ALWAYS" />
+                            <TextField fx:id="txtEnvioDestinatario" promptText="Destinatario" HBox.hgrow="ALWAYS" />
+                        </HBox>
+                        <HBox spacing="12.0" alignment="CENTER_LEFT">
+                            <TextField fx:id="txtEnvioPeso" promptText="Peso (kg)" prefWidth="140.0" />
+                            <Button text="Calcular Tarifa" styleClass="btn-secondary" onAction="#calcularTarifaEnvio" />
+                            <TextField fx:id="txtEnvioCosto" promptText="Costo Total ($)" prefWidth="160.0" />
+                            <TextField fx:id="txtEnvioObservaciones" promptText="Observaciones" HBox.hgrow="ALWAYS" />
+                            <Button text="Registrar Envío" styleClass="btn-primary" onAction="#guardarEnvio" />
+                        </HBox>
+                    </VBox>
+
+                    <VBox spacing="12.0" VBox.vgrow="ALWAYS" styleClass="panel-card">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Label text="LISTA DE ENVÍOS" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px;" />
+                            <Pane HBox.hgrow="ALWAYS" />
+                            <Button text="✓ Marcar Entregado" styleClass="btn-secondary" onAction="#entregarEnvioSeleccionado" />
+                            <Button text="Eliminar Seleccionado" styleClass="btn-danger-outline" onAction="#eliminarEnvioSeleccionado" />
+                        </HBox>
+                        <TableView fx:id="tblEnvios" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colEnvId" text="ID" prefWidth="60.0" />
+                                <TableColumn fx:id="colEnvGuia" text="GUÍA" prefWidth="140.0" />
+                                <TableColumn fx:id="colEnvRemitente" text="REMITENTE" prefWidth="180.0" />
+                                <TableColumn fx:id="colEnvDestinatario" text="DESTINATARIO" prefWidth="180.0" />
+                                <TableColumn fx:id="colEnvPeso" text="PESO (KG)" prefWidth="100.0" />
+                                <TableColumn fx:id="colEnvCosto" text="COSTO" prefWidth="120.0" />
+                                <TableColumn fx:id="colEnvEstado" text="ESTADO" prefWidth="130.0" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </VBox>
+
+                <!-- =====================================================
+                     3. PAQUETES Y GUÍAS
+                     ===================================================== -->
+                <VBox fx:id="vistaPaquetes" visible="false" managed="false" spacing="20.0">
+                    <Label text="Paquetes y Guías" style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;" />
+
+                    <VBox spacing="12.0" styleClass="form-card">
+                        <Label text="Agregar Paquete a una Operación" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;" />
+                        <HBox spacing="12.0" alignment="CENTER_LEFT">
+                            <ComboBox fx:id="cmbPaqueteOperacion" promptText="Seleccione Operación / Guía" prefWidth="280.0" />
+                            <TextField fx:id="txtPaqueteProducto" promptText="Nombre del Producto" HBox.hgrow="ALWAYS" />
+                            <TextField fx:id="txtPaqueteCantidad" promptText="Cantidad" text="1" prefWidth="90.0" />
+                            <TextField fx:id="txtPaqueteDescripcion" promptText="Descripción" HBox.hgrow="ALWAYS" />
+                            <Button text="Guardar Paquete" styleClass="btn-primary" onAction="#guardarPaquete" />
+                        </HBox>
+                    </VBox>
+
+                    <VBox spacing="12.0" VBox.vgrow="ALWAYS" styleClass="panel-card">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Label text="PAQUETES REGISTRADOS" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px;" />
+                            <Pane HBox.hgrow="ALWAYS" />
+                            <Button text="Eliminar Seleccionado" styleClass="btn-danger-outline" onAction="#eliminarPaqueteSeleccionado" />
+                        </HBox>
+                        <TableView fx:id="tblPaquetes" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colPaqId" text="ID PAQUETE" prefWidth="90.0" />
+                                <TableColumn fx:id="colPaqIdOperacion" text="ID OPERACIÓN" prefWidth="110.0" />
+                                <TableColumn fx:id="colPaqProducto" text="PRODUCTO" prefWidth="240.0" />
+                                <TableColumn fx:id="colPaqDescripcion" text="DESCRIPCIÓN" prefWidth="320.0" />
+                                <TableColumn fx:id="colPaqCantidad" text="CANTIDAD" prefWidth="100.0" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </VBox>
+
+                <!-- =====================================================
+                     4. RECEPCIÓN Y ENTREGA
+                     ===================================================== -->
+                <VBox fx:id="vistaRecepcion" visible="false" managed="false" spacing="20.0">
+                    <Label text="Recepción y Entrega de Paquetes" style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;" />
+
+                    <VBox spacing="12.0" styleClass="form-card">
+                        <Label text="Registrar Nueva Recepción" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;" />
+                        <HBox spacing="12.0" alignment="CENTER_LEFT">
+                            <ComboBox fx:id="cmbRecepcionTransportadora" promptText="Transportadora" prefWidth="220.0" />
+                            <TextField fx:id="txtRecepcionGuia" promptText="Número de Guía" HBox.hgrow="ALWAYS" />
+                            <TextField fx:id="txtRecepcionRemitente" promptText="Remitente / Tienda" HBox.hgrow="ALWAYS" />
+                            <TextField fx:id="txtRecepcionDestinatario" promptText="Destinatario" HBox.hgrow="ALWAYS" />
+                            <TextField fx:id="txtRecepcionObservaciones" promptText="Observaciones" HBox.hgrow="ALWAYS" />
+                            <Button text="Registrar Recepción" styleClass="btn-primary" onAction="#guardarRecepcion" />
+                        </HBox>
+                    </VBox>
+
+                    <VBox spacing="12.0" VBox.vgrow="ALWAYS" styleClass="panel-card">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Label text="LISTA DE RECEPCIONES" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px;" />
+                            <Pane HBox.hgrow="ALWAYS" />
+                            <Button text="✓ Confirmar Entrega" styleClass="btn-secondary" onAction="#entregarRecepcionSeleccionada" />
+                            <Button text="Cancelar Recepción" styleClass="btn-secondary" onAction="#cancelarRecepcionSeleccionada" />
+                            <Button text="Eliminar Seleccionado" styleClass="btn-danger-outline" onAction="#eliminarRecepcionSeleccionada" />
+                        </HBox>
+                        <TableView fx:id="tblRecepciones" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colRecId" text="ID" prefWidth="60.0" />
+                                <TableColumn fx:id="colRecGuia" text="GUÍA" prefWidth="150.0" />
+                                <TableColumn fx:id="colRecRemitente" text="REMITENTE" prefWidth="200.0" />
+                                <TableColumn fx:id="colRecDestinatario" text="DESTINATARIO" prefWidth="200.0" />
+                                <TableColumn fx:id="colRecObservaciones" text="OBSERVACIONES" prefWidth="220.0" />
+                                <TableColumn fx:id="colRecEstado" text="ESTADO" prefWidth="130.0" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </VBox>
+
+                <!-- =====================================================
+                     5. TRANSPORTADORAS Y TARIFAS
+                     ===================================================== -->
+                <VBox fx:id="vistaTarifas" visible="false" managed="false" spacing="20.0">
+                    <Label text="Transportadoras y Tarifas" style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;" />
+
+                    <!-- Bloque Transportadoras -->
+                    <VBox spacing="10.0" styleClass="form-card">
+                        <Label text="Gestión de Transportadoras" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;" />
+                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                            <TextField fx:id="txtTransNombre" promptText="Nombre" HBox.hgrow="ALWAYS" />
+                            <TextField fx:id="txtTransNit" promptText="NIT" prefWidth="140.0" />
+                            <TextField fx:id="txtTransTelefono" promptText="Teléfono" prefWidth="140.0" />
+                            <TextField fx:id="txtTransDireccion" promptText="Dirección" HBox.hgrow="ALWAYS" />
+                            <ComboBox fx:id="cmbTransServicio" promptText="Servicio" prefWidth="140.0" />
+                            <Button text="Guardar" styleClass="btn-primary" onAction="#guardarTransportadora" />
+                            <Button text="Eliminar" styleClass="btn-danger-outline" onAction="#eliminarTransportadoraSeleccionada" />
+                        </HBox>
+                        <TableView fx:id="tblTransportadoras" prefHeight="190.0">
+                            <columns>
+                                <TableColumn fx:id="colTransId" text="ID" prefWidth="60.0" />
+                                <TableColumn fx:id="colTransNombre" text="NOMBRE" prefWidth="180.0" />
+                                <TableColumn fx:id="colTransNit" text="NIT" prefWidth="140.0" />
+                                <TableColumn fx:id="colTransTelefono" text="TELÉFONO" prefWidth="140.0" />
+                                <TableColumn fx:id="colTransDireccion" text="DIRECCIÓN" prefWidth="220.0" />
+                                <TableColumn fx:id="colTransServicio" text="SERVICIO" prefWidth="130.0" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+
+                    <!-- Bloque Tarifas -->
+                    <VBox spacing="10.0" styleClass="form-card">
+                        <Label text="Tarifas por Rango de Peso (kg)" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;" />
+                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                            <ComboBox fx:id="cmbTarifaTransportadora" promptText="Transportadora" prefWidth="240.0" />
+                            <TextField fx:id="txtTarifaPesoMin" promptText="Peso Mín (kg)" HBox.hgrow="ALWAYS" />
+                            <TextField fx:id="txtTarifaPesoMax" promptText="Peso Máx (kg)" HBox.hgrow="ALWAYS" />
+                            <TextField fx:id="txtTarifaValor" promptText="Valor ($)" HBox.hgrow="ALWAYS" />
+                            <Button text="Guardar Tarifa" styleClass="btn-primary" onAction="#guardarTarifa" />
+                            <Button text="Eliminar" styleClass="btn-danger-outline" onAction="#eliminarTarifaSeleccionada" />
+                        </HBox>
+                        <TableView fx:id="tblTarifas" prefHeight="190.0">
+                            <columns>
+                                <TableColumn fx:id="colTarId" text="ID TARIFA" prefWidth="90.0" />
+                                <TableColumn fx:id="colTarIdTransportadora" text="ID TRANSPORTADORA" prefWidth="160.0" />
+                                <TableColumn fx:id="colTarPesoMin" text="PESO MÍN (KG)" prefWidth="160.0" />
+                                <TableColumn fx:id="colTarPesoMax" text="PESO MÁX (KG)" prefWidth="160.0" />
+                                <TableColumn fx:id="colTarValor" text="VALOR ($)" prefWidth="180.0" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </VBox>
+
+                <!-- =====================================================
+                     6. GESTIÓN DE USUARIOS
+                     ===================================================== -->
+                <VBox fx:id="vistaUsuarios" visible="false" managed="false" spacing="20.0">
+                    <Label text="Gestión de Usuarios" style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;" />
+
+                    <VBox spacing="12.0" styleClass="form-card">
+                        <Label text="Registrar Nuevo Usuario" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;" />
+                        <HBox spacing="10.0" alignment="CENTER_LEFT">
+                            <TextField fx:id="txtUsuNombre" promptText="Nombre Completo" HBox.hgrow="ALWAYS" />
+                            <TextField fx:id="txtUsuLogin" promptText="Usuario (Login)" prefWidth="140.0" />
+                            <PasswordField fx:id="txtUsuContrasena" promptText="Contraseña" prefWidth="140.0" />
+                            <TextField fx:id="txtUsuTelefono" promptText="Teléfono" prefWidth="130.0" />
+                            <TextField fx:id="txtUsuEmail" promptText="Email" HBox.hgrow="ALWAYS" />
+                            <ComboBox fx:id="cmbUsuRol" promptText="Rol" prefWidth="150.0" />
+                            <Button text="Guardar" styleClass="btn-primary" onAction="#guardarUsuario" />
+                        </HBox>
+                    </VBox>
+
+                    <VBox spacing="12.0" VBox.vgrow="ALWAYS" styleClass="panel-card">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <Label text="USUARIOS DEL SISTEMA" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 12px;" />
+                            <Pane HBox.hgrow="ALWAYS" />
+                            <Button text="Activar / Desactivar" styleClass="btn-secondary" onAction="#cambiarEstadoUsuarioSeleccionado" />
+                            <Button text="Eliminar Seleccionado" styleClass="btn-danger-outline" onAction="#eliminarUsuarioSeleccionado" />
+                        </HBox>
+                        <TableView fx:id="tblUsuarios" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colUsuId" text="ID" prefWidth="60.0" />
+                                <TableColumn fx:id="colUsuNombre" text="NOMBRE" prefWidth="200.0" />
+                                <TableColumn fx:id="colUsuLogin" text="LOGIN" prefWidth="140.0" />
+                                <TableColumn fx:id="colUsuTelefono" text="TELÉFONO" prefWidth="140.0" />
+                                <TableColumn fx:id="colUsuEmail" text="EMAIL" prefWidth="200.0" />
+                                <TableColumn fx:id="colUsuRol" text="ROL" prefWidth="150.0" />
+                                <TableColumn fx:id="colUsuActivo" text="ACTIVO" prefWidth="100.0" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </VBox>
+
+            </StackPane>
+        </ScrollPane>
+    </center>
+
+    <!-- BOTTOM: Barra de Estado -->
+    <bottom>
+        <HBox alignment="CENTER_LEFT" styleClass="bottom-bar">
+            <FontIcon iconLiteral="fab-git-alt" iconSize="14" style="-fx-icon-color: #1DB954;"/>
+            <Label styleClass="texto-mono" text=" git: feature/base-estructura   |   Arquitectura: MVC + DAO + PostgreSQL JDBC" />
+            <Pane HBox.hgrow="ALWAYS" />
+            <HBox spacing="15.0" alignment="CENTER">
+                <Label styleClass="texto-mono" text="Charset: UTF-8" />
+                <Label styleClass="texto-mono, texto-mono-verde" text="● Conectado a Neon" />
+            </HBox>
+        </HBox>
+    </bottom>
+</BorderPane>

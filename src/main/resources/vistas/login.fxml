@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<StackPane prefHeight="820.0" prefWidth="1280.0" stylesheets="@estilos.css" style="-fx-background-color: -ares-bg-black;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.uniajc.controlador.LoginController">
+
+    <!-- Tarjeta central de Login -->
+    <VBox alignment="CENTER" spacing="20.0" maxWidth="390.0" maxHeight="470.0" styleClass="bloque-tarjeta" style="-fx-padding: 40 30;">
+
+        <!-- Logo circular verde -->
+        <VBox alignment="CENTER" style="-fx-background-color: -ares-green-main; -fx-background-radius: 500; -fx-min-width: 64; -fx-min-height: 64; -fx-max-width: 64; -fx-max-height: 64;">
+            <Label text="ARES" style="-fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 16px;" />
+        </VBox>
+
+        <VBox alignment="CENTER" spacing="5.0">
+            <Label text="ARES Logistics" style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;" />
+            <Label text="Control de Envíos y Logística Integrada" style="-fx-text-fill: -ares-text-secondary; -fx-font-size: 13px;" />
+        </VBox>
+
+        <VBox spacing="15.0" style="-fx-padding: 15 0 0 0;">
+            <VBox spacing="5.0">
+                <Label text="Usuario del Sistema:" styleClass="texto-base" />
+                <TextField fx:id="txtUsuario" promptText="ej. admin" onAction="#iniciarSesion" />
+            </VBox>
+
+            <VBox spacing="5.0">
+                <Label text="Contraseña:" styleClass="texto-base" />
+                <PasswordField fx:id="txtPassword" promptText="••••••••" onAction="#iniciarSesion" />
+            </VBox>
+
+            <!-- Mensaje de error oculto -->
+            <Label fx:id="lblError" wrapText="true" text="Usuario o contraseña incorrectos." style="-fx-text-fill: -ares-danger; -fx-font-weight: bold;" visible="false" />
+
+            <Button maxWidth="Infinity" defaultButton="true" styleClass="btn-primary" text="Iniciar Sesión" onAction="#iniciarSesion" />
+        </VBox>
+
+        <HBox alignment="CENTER">
+            <Button text="Salir del Sistema" styleClass="btn-danger-outline" onAction="#cerrarApp" />
+        </HBox>
+    </VBox>
+</StackPane>
