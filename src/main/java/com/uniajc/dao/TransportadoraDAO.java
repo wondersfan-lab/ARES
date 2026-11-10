@@ -10,10 +10,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Acceso a datos de la tabla ares.transportadora (los operadores).
- * Las decisiones generales están explicadas en UsuarioDAO.
- */
+
 public class TransportadoraDAO implements BaseDAO<Transportadora> {
 
     private static final String SCHEMA = "ares.";
@@ -74,7 +71,7 @@ public class TransportadoraDAO implements BaseDAO<Transportadora> {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            // Falla si ya tiene operaciones registradas: en ese caso conviene desactivarla (activo = false).
+            
             throw new RuntimeException("Error al eliminar transportadora: " + e.getMessage(), e);
         }
     }
@@ -97,7 +94,7 @@ public class TransportadoraDAO implements BaseDAO<Transportadora> {
         }
     }
 
-    /** Busca un operador por su nombre exacto (por ejemplo "Coordinadora"). */
+    
     public Transportadora buscarPorNombre(String nombre) {
         String sql = "SELECT * FROM " + SCHEMA + "transportadora WHERE nombre = ?";
         try (Connection conn = ConexionPostgresDatabase.getConnection();

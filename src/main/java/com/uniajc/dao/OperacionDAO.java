@@ -12,14 +12,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Acceso a datos de la tabla ares.operacion (envíos y recepciones).
- * Las decisiones generales están explicadas en UsuarioDAO.
- *
- * Decisión: las consultas por fecha y por guía tienen su propio método porque
- * son las más usadas del negocio (reporte del día y búsqueda de un paquete).
- * Las dos columnas tienen índice en la base de datos.
- */
+
 public class OperacionDAO implements BaseDAO<Operacion> {
 
     private static final String SCHEMA = "ares.";
@@ -65,7 +58,7 @@ public class OperacionDAO implements BaseDAO<Operacion> {
 
     @Override
     public boolean eliminar(int id) {
-        // Los paquetes de la operación se borran solos (ON DELETE CASCADE en la base).
+        
         String sql = "DELETE FROM " + SCHEMA + "operacion WHERE id_operacion = ?";
         try (Connection conn = ConexionPostgresDatabase.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -95,13 +88,13 @@ public class OperacionDAO implements BaseDAO<Operacion> {
         }
     }
 
-    /** Busca operaciones por número de guía (puede haber una de envío y otra de recepción). */
+    
     public List<Operacion> buscarPorGuia(String guia) {
         String sql = "SELECT * FROM " + SCHEMA + "operacion WHERE guia = ? ORDER BY id_operacion ASC";
         return consultarLista(sql, guia);
     }
 
-    /** Operaciones de un día, de la más temprana a la más reciente. Es la base del reporte diario y del Excel. */
+    
     public List<Operacion> listarPorFecha(LocalDate fecha) {
         String sql = "SELECT * FROM " + SCHEMA + "operacion WHERE fecha = ? ORDER BY hora ASC, id_operacion ASC";
         return consultarLista(sql, fecha);
@@ -113,11 +106,7 @@ public class OperacionDAO implements BaseDAO<Operacion> {
         return consultarLista(sql, null);
     }
 
-    /**
-     * Ejecuta un SELECT que devuelve varias operaciones. El parámetro es opcional
-     * (puede ser null si la consulta no tiene "?"). Evita repetir el mismo código
-     * en los tres métodos de consulta de arriba.
-     */
+    
     private List<Operacion> consultarLista(String sql, Object parametro) {
         List<Operacion> lista = new ArrayList<>();
         try (Connection conn = ConexionPostgresDatabase.getConnection();
@@ -137,7 +126,7 @@ public class OperacionDAO implements BaseDAO<Operacion> {
         }
     }
 
-    /** Asigna los 12 campos comunes al INSERT y al UPDATE (mismo orden en ambos SQL). */
+   
     private void asignarParametros(PreparedStatement ps, Operacion o) throws SQLException {
         ps.setInt(1, o.getIdTransportadora());
         ps.setInt(2, o.getIdUsuario());

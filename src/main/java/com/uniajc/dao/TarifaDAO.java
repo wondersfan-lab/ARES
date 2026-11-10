@@ -11,10 +11,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Acceso a datos de la tabla ares.tarifa.
- * Las decisiones generales están explicadas en UsuarioDAO.
- */
+
 public class TarifaDAO implements BaseDAO<Tarifa> {
 
     private static final String SCHEMA = "ares.";
@@ -109,7 +106,7 @@ public class TarifaDAO implements BaseDAO<Tarifa> {
         }
     }
 
-    /** Todas las tarifas de un operador, ordenadas por peso. */
+    
     public List<Tarifa> listarPorTransportadora(int idTransportadora) {
         String sql = "SELECT * FROM " + SCHEMA + "tarifa WHERE id_transportadora = ? ORDER BY peso_min ASC";
         List<Tarifa> lista = new ArrayList<>();
@@ -128,11 +125,7 @@ public class TarifaDAO implements BaseDAO<Tarifa> {
         }
     }
 
-    /**
-     * Busca la tarifa que le corresponde a un peso: peso mínimo excluido y
-     * máximo incluido (5 kg cae en el rango 0-5). Devuelve null si ningún
-     * rango cubre ese peso. Sirve para calcular el costo de un envío.
-     */
+    
     public Tarifa buscarTarifaParaPeso(int idTransportadora, BigDecimal peso) {
         String sql = "SELECT * FROM " + SCHEMA + "tarifa "
                    + "WHERE id_transportadora = ? AND ? > peso_min AND ? <= peso_max "
