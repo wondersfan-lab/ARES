@@ -15,7 +15,7 @@ public class Operacion {
     public static final String ENTREGADO = "ENTREGADO";
     public static final String CANCELADO = "CANCELADO";
 
-    /** Zona horaria del negocio (el servidor de Neon trabaja en UTC). */
+    
     public static final ZoneId ZONA = ZoneId.of("America/Bogota");
 
     private int id;

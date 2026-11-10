@@ -10,10 +10,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Acceso a datos de la tabla ares.paquete.
- * Las decisiones generales están explicadas en UsuarioDAO.
- */
+
 public class PaqueteDAO implements BaseDAO<Paquete> {
 
     private static final String SCHEMA = "ares.";
@@ -92,7 +89,7 @@ public class PaqueteDAO implements BaseDAO<Paquete> {
         }
     }
 
-    /** Todos los paquetes de una operación. */
+    
     public List<Paquete> listarPorOperacion(int idOperacion) {
         String sql = "SELECT * FROM " + SCHEMA + "paquete WHERE id_operacion = ? ORDER BY id_paquete ASC";
         List<Paquete> lista = new ArrayList<>();

@@ -10,17 +10,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Acceso a datos de la tabla ares.usuario.
- *
- * Decisiones generales (iguales en todos los DAO):
- *  - Se usa PreparedStatement con "?" y nunca se concatenan valores en el SQL,
- *    para evitar inyección SQL.
- *  - try-with-resources cierra Connection, PreparedStatement y ResultSet solos.
- *  - Los errores de SQL se convierten en RuntimeException con un mensaje claro.
- *  - Al insertar se pide la llave generada (RETURN_GENERATED_KEYS) y se copia
- *    al objeto, así después de insertar el objeto ya tiene su id.
- */
+
 public class UsuarioDAO implements BaseDAO<Usuario> {
 
     private static final String SCHEMA = "ares.";
@@ -123,10 +113,7 @@ public class UsuarioDAO implements BaseDAO<Usuario> {
         }
     }
 
-    /**
-     * Inicio de sesión: devuelve el usuario si el login y la contraseña
-     * coinciden y el usuario está activo; si no, devuelve null.
-     */
+    
     public Usuario autenticar(String login, String contrasena) {
         String sql = "SELECT * FROM " + SCHEMA + "usuario WHERE usuario = ? AND contrasena = ? AND activo = TRUE";
         try (Connection conn = ConexionPostgresDatabase.getConnection();
@@ -145,7 +132,7 @@ public class UsuarioDAO implements BaseDAO<Usuario> {
         }
     }
 
-    /** Convierte una fila de la tabla en un objeto Usuario. */
+   
     private Usuario mapearUsuario(ResultSet rs) throws SQLException {
         Usuario u = new Usuario();
         u.setId(rs.getInt("id_usuario"));
