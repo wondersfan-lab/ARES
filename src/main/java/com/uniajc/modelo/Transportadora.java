@@ -58,6 +58,6 @@ public class Transportadora {
 
     @Override
     public String toString() {
-        return "Transportadora{id=" + id + ", nombre='" + nombre + "', servicio='" + tipoServicio + "'}";
+        return nombre;
     }
 }

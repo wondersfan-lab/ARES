@@ -93,7 +93,11 @@ public class Operacion {
 
     @Override
     public String toString() {
-        return "Operacion{id=" + id + ", tipo='" + tipo + "', guia='" + guia + "', fecha=" + fecha
-                + ", hora=" + hora + ", estado='" + estado + "'}";
+        String g = guia != null ? guia.trim() : "";
+        String dest = destinatario != null ? destinatario.trim() : "";
+        if (g.toUpperCase().startsWith("DEMO-") || g.toUpperCase().contains("DEMO")) {
+            return tipo + " - (" + dest + ")";
+        }
+        return "Guía " + g + " - (" + dest + ")";
     }
 }

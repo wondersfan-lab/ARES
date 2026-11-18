@@ -13,6 +13,9 @@
     -ares-green-hover: #1ED760;
     -ares-green-pressed: #169C46;
 
+    -ares-blue-main: #0EA5E9;
+    -ares-orange-main: #F59B23;
+
     -ares-text-primary: #FFFFFF;
     -ares-text-secondary: #B3B3B3;
     -ares-text-muted: #727272;
@@ -66,16 +69,16 @@
 .panel-card {
     -fx-background-color: -ares-bg-block;
     -fx-border-color: -ares-border-main;
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
     -fx-padding: 15;
 }
 .form-card {
     -fx-background-color: -ares-bg-card;
     -fx-border-color: -ares-border-main;
-    -fx-border-radius: 8px;
-    -fx-background-radius: 8px;
-    -fx-padding: 15;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 16;
 }
 
 /* Botones de ventana */
@@ -95,7 +98,7 @@
 
 /* Menú Lateral */
 .sidebar {
-    -fx-background-color: transparent;
+    -fx-background-color: #090909;
     -fx-border-color: transparent -ares-border-main transparent transparent;
 }
 .nav-btn {
@@ -114,17 +117,18 @@
 .nav-btn-active {
     -fx-background-color: -ares-bg-card-hover;
     -fx-text-fill: -ares-text-primary;
+    -fx-font-weight: bold;
     -fx-border-color: transparent transparent transparent -ares-green-main;
     -fx-border-width: 0 0 0 3px;
     -fx-background-radius: 4px;
 }
 
-/* Íconos del menú forzados a verde */
+/* Íconos del menú */
 .nav-icon { -fx-icon-color: -ares-green-main; }
 .nav-btn:hover .nav-icon { -fx-icon-color: -ares-green-hover; }
 .nav-btn-active .nav-icon { -fx-icon-color: -ares-green-main; }
 
-/* Botones Principales, Secundarios y Peligro */
+/* Variedad de Botones */
 .btn-primary {
     -fx-background-color: -ares-green-main;
     -fx-text-fill: -ares-bg-black;
@@ -144,7 +148,7 @@
     -fx-border-radius: 500px;
     -fx-background-radius: 500px;
     -fx-font-weight: bold;
-    -fx-padding: 8 18;
+    -fx-padding: 7 16;
     -fx-cursor: hand;
 }
 .btn-secondary:hover {
@@ -152,16 +156,61 @@
     -fx-border-color: -ares-green-main;
 }
 
+.btn-info {
+    -fx-background-color: #10233A;
+    -fx-text-fill: #38BDF8;
+    -fx-border-color: #0EA5E9;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-font-weight: bold;
+    -fx-padding: 7 14;
+    -fx-cursor: hand;
+}
+.btn-info:hover {
+    -fx-background-color: #0EA5E9;
+    -fx-text-fill: #000000;
+}
+
+.btn-warning {
+    -fx-background-color: #33240A;
+    -fx-text-fill: #F59B23;
+    -fx-border-color: #F59B23;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-font-weight: bold;
+    -fx-padding: 7 14;
+    -fx-cursor: hand;
+}
+.btn-warning:hover {
+    -fx-background-color: #F59B23;
+    -fx-text-fill: #000000;
+}
+
+.btn-success-outline {
+    -fx-background-color: #0F2E1B;
+    -fx-text-fill: #1ED760;
+    -fx-border-color: #1DB954;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-font-weight: bold;
+    -fx-padding: 7 14;
+    -fx-cursor: hand;
+}
+.btn-success-outline:hover {
+    -fx-background-color: #1DB954;
+    -fx-text-fill: #000000;
+}
+
 .btn-danger-outline {
-    -fx-background-color: -ares-bg-black;
+    -fx-background-color: #1A0B0E;
     -fx-border-color: -ares-danger;
     -fx-border-radius: 6px;
     -fx-background-radius: 6px;
-    -fx-text-fill: -ares-danger;
+    -fx-text-fill: #FF5A67;
     -fx-font-weight: bold;
     -fx-cursor: hand;
     -fx-alignment: center;
-    -fx-padding: 8 16;
+    -fx-padding: 7 14;
 }
 .btn-danger-outline:hover {
     -fx-background-color: -ares-danger;
@@ -188,6 +237,10 @@
     -fx-border-radius: 6px;
     -fx-border-color: #333333;
     -fx-padding: 2 6;
+    -fx-cursor: hand;
+}
+.combo-box-base:hover, .combo-box-base:focused {
+    -fx-border-color: -ares-green-main;
 }
 .combo-box .list-cell {
     -fx-text-fill: -ares-text-primary;
@@ -200,7 +253,7 @@
 .combo-box-popup .list-view .list-cell {
     -fx-background-color: -ares-bg-card;
     -fx-text-fill: -ares-text-primary;
-    -fx-padding: 6 10;
+    -fx-padding: 8 12;
 }
 .combo-box-popup .list-view .list-cell:hover,
 .combo-box-popup .list-view .list-cell:filled:selected {
@@ -256,6 +309,7 @@
     -fx-background-color: -ares-bg-card !important;
     -fx-border-width: 0 0 1px 0;
     -fx-border-color: -ares-border-main;
+    -fx-size: 36px;
 }
 .table-view .column-header .label {
     -fx-text-fill: -ares-text-secondary;

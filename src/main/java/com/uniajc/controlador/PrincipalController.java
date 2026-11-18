@@ -10,6 +10,7 @@ import com.uniajc.modelo.Paquete;
 import com.uniajc.modelo.Tarifa;
 import com.uniajc.modelo.Transportadora;
 import com.uniajc.modelo.Usuario;
+import com.uniajc.servicios.ExportadorExcel;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -23,9 +24,11 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -75,8 +78,8 @@ public class PrincipalController {
     @FXML private TableColumn<Operacion, String> colEstado;
     @FXML private TableColumn<Operacion, BigDecimal> colCostoTotal;
 
-    // --- 2. GESTIÓN DE ENVÍOS ---
-    @FXML private ComboBox<Transportadora> cmbEnvioTransportadora;
+    // --- 2. GESTIÓN DE ENVÍOS (ComboBox<String> para mostrar nombres limpios) ---
+    @FXML private ComboBox<String> cmbEnvioTransportadora;
     @FXML private TextField txtEnvioGuia;
     @FXML private TextField txtEnvioRemitente;
     @FXML private TextField txtEnvioDestinatario;
@@ -93,7 +96,7 @@ public class PrincipalController {
     @FXML private TableColumn<Operacion, String> colEnvEstado;
 
     // --- 3. PAQUETES Y GUÍAS ---
-    @FXML private ComboBox<Operacion> cmbPaqueteOperacion;
+    @FXML private ComboBox<String> cmbPaqueteOperacion;
     @FXML private TextField txtPaqueteProducto;
     @FXML private TextField txtPaqueteCantidad;
     @FXML private TextField txtPaqueteDescripcion;
@@ -105,7 +108,7 @@ public class PrincipalController {
     @FXML private TableColumn<Paquete, Integer> colPaqCantidad;
 
     // --- 4. RECEPCIÓN Y ENTREGA ---
-    @FXML private ComboBox<Transportadora> cmbRecepcionTransportadora;
+    @FXML private ComboBox<String> cmbRecepcionTransportadora;
     @FXML private TextField txtRecepcionGuia;
     @FXML private TextField txtRecepcionRemitente;
     @FXML private TextField txtRecepcionDestinatario;
@@ -132,7 +135,7 @@ public class PrincipalController {
     @FXML private TableColumn<Transportadora, String> colTransDireccion;
     @FXML private TableColumn<Transportadora, String> colTransServicio;
 
-    @FXML private ComboBox<Transportadora> cmbTarifaTransportadora;
+    @FXML private ComboBox<String> cmbTarifaTransportadora;
     @FXML private TextField txtTarifaPesoMin;
     @FXML private TextField txtTarifaPesoMax;
     @FXML private TextField txtTarifaValor;
@@ -175,11 +178,19 @@ public class PrincipalController {
     private final ObservableList<Tarifa> listaTarifas = FXCollections.observableArrayList();
     private final ObservableList<Usuario> listaUsuarios = FXCollections.observableArrayList();
 
+    // Objetos seleccionados para edición simple
+    private Operacion envioEditando = null;
+    private Operacion recepcionEditando = null;
+    private Paquete paqueteEditando = null;
+    private Transportadora transportadoraEditando = null;
+    private Tarifa tarifaEditando = null;
+    private Usuario usuarioEditando = null;
+
     @FXML
     public void initialize() {
         configurarArrastreVentana();
         configurarPermisosRol();
-        configurarCombos();
+        configurarCombosFijos();
         configurarColumnasTablas();
         cargarDatosDesdeDAO();
     }
@@ -224,7 +235,7 @@ public class PrincipalController {
         }
     }
 
-    private void configurarCombos() {
+    private void configurarCombosFijos() {
         cmbTransServicio.getItems().addAll(
                 Transportadora.SERVICIO_ENVIO,
                 Transportadora.SERVICIO_RECEPCION,
@@ -301,57 +312,137 @@ public class PrincipalController {
         tblUsuarios.setItems(listaUsuarios);
     }
 
-    // --- CARGA DE DATOS DESDE LOS DAO ---
+    // --- CARGA OPTIMIZADA POR MÓDULO (RÁPIDA Y LIMPIA) ---
     @FXML
     public void cargarDatosDesdeDAO() {
+        cargarTransportadoras();
+        cargarTarifas();
+        cargarUsuarios();
+        cargarPaquetes();
+        cargarOperaciones();
+    }
+
+    private void cargarTransportadoras() {
         try {
-            // Transportadoras
             List<Transportadora> transportadorasBD = transportadoraDAO.listarTodos();
             listaTransportadoras.setAll(transportadorasBD);
-            cmbEnvioTransportadora.setItems(listaTransportadoras);
-            cmbRecepcionTransportadora.setItems(listaTransportadoras);
-            cmbTarifaTransportadora.setItems(listaTransportadoras);
 
-            // Tarifas y Usuarios
-            listaTarifas.setAll(tarifaDAO.listarTodos());
-            listaUsuarios.setAll(usuarioDAO.listarTodos());
+            cmbEnvioTransportadora.getItems().clear();
+            cmbRecepcionTransportadora.getItems().clear();
+            cmbTarifaTransportadora.getItems().clear();
 
-            // Paquetes
-            List<Paquete> paquetesBD = paqueteDAO.listarTodos();
-            listaPaquetes.setAll(paquetesBD);
+            for (Transportadora t : transportadorasBD) {
+                cmbTarifaTransportadora.getItems().add(t.getNombre());
+                if (t.isActivo()) {
+                    if (Transportadora.SERVICIO_ENVIO.equals(t.getTipoServicio())
+                            || Transportadora.SERVICIO_AMBOS.equals(t.getTipoServicio())) {
+                        cmbEnvioTransportadora.getItems().add(t.getNombre());
+                    }
+                    if (Transportadora.SERVICIO_RECEPCION.equals(t.getTipoServicio())
+                            || Transportadora.SERVICIO_AMBOS.equals(t.getTipoServicio())) {
+                        cmbRecepcionTransportadora.getItems().add(t.getNombre());
+                    }
+                }
+            }
+            lblTotalTransportadoras.setText(transportadorasBD.size() + " Activas");
+        } catch (Exception e) {
+            System.out.println("Error cargando transportadoras: " + e.getMessage());
+        }
+    }
 
-            // Operaciones (Envíos y Recepciones)
+    private void cargarOperaciones() {
+        try {
             List<Operacion> operacionesBD = operacionDAO.listarTodos();
             listaOperaciones.setAll(operacionesBD);
-            cmbPaqueteOperacion.setItems(listaOperaciones);
 
             listaEnvios.clear();
             listaRecepciones.clear();
+            cmbPaqueteOperacion.getItems().clear();
             double ingresos = 0;
 
             for (Operacion op : operacionesBD) {
+                // Texto limpio para el desplegable de Paquetes y Guías
+                cmbPaqueteOperacion.getItems().add(formatearOperacionParaCombo(op));
+
                 if (Operacion.ENVIO.equals(op.getTipo())) {
                     listaEnvios.add(op);
                 } else {
                     listaRecepciones.add(op);
                 }
-                if (op.getCosto() != null) {
+                if (op.getCosto() != null && !Operacion.CANCELADO.equals(op.getEstado())) {
                     ingresos += op.getCosto().doubleValue();
                 }
             }
 
-            // Actualizar KPIs
             lblTotalEnviosHoy.setText(String.valueOf(operacionesBD.size()));
-            lblTotalPaquetes.setText(String.valueOf(paquetesBD.size()));
-            lblTotalTransportadoras.setText(transportadorasBD.size() + " Activas");
             lblBadgeEnvios.setText(String.valueOf(listaEnvios.size()));
 
             NumberFormat formatoMoneda = NumberFormat.getCurrencyInstance(Locale.of("es", "CO"));
             formatoMoneda.setMaximumFractionDigits(0);
             lblIngresosTotales.setText(formatoMoneda.format(ingresos));
 
+            // Sincronización automática en tiempo real con Registros_ARES.xlsx
+            actualizarExcelEnSegundoPlano();
         } catch (Exception e) {
-            System.out.println("Error consultando la BD: " + e.getMessage());
+            System.out.println("Error cargando operaciones: " + e.getMessage());
+        }
+    }
+
+    private void actualizarExcelEnSegundoPlano() {
+        List<Operacion> copiaOperaciones = new ArrayList<>(listaOperaciones);
+        Thread hiloExcel = new Thread(() -> {
+            try {
+                ExportadorExcel.exportarOperaciones(copiaOperaciones);
+            } catch (IOException e) {
+                Platform.runLater(() -> mostrarMensaje(
+                        "Archivo Excel Abierto",
+                        "La operación se guardó en PostgreSQL, pero no se pudo actualizar Registros_ARES.xlsx porque está abierto en Excel.\n\nPor favor cierre el archivo Excel."
+                ));
+            }
+        });
+        hiloExcel.setDaemon(true);
+        hiloExcel.start();
+    }
+
+    @FXML
+    private void exportarExcelManual() {
+        try {
+            File archivo = ExportadorExcel.exportarOperaciones(listaOperaciones);
+            mostrarMensaje(
+                    "Exportación a Excel Exitosa",
+                    "El archivo se guardó y actualizó correctamente en:\n" + archivo.getAbsolutePath()
+            );
+        } catch (IOException e) {
+            mostrarMensaje(
+                    "Archivo Excel Abierto",
+                    "No se pudo guardar Registros_ARES.xlsx porque lo tiene abierto en Microsoft Excel.\n\nPor favor cierre el archivo e intente nuevamente."
+            );
+        }
+    }
+
+    private void cargarPaquetes() {
+        try {
+            List<Paquete> paquetesBD = paqueteDAO.listarTodos();
+            listaPaquetes.setAll(paquetesBD);
+            lblTotalPaquetes.setText(String.valueOf(paquetesBD.size()));
+        } catch (Exception e) {
+            System.out.println("Error cargando paquetes: " + e.getMessage());
+        }
+    }
+
+    private void cargarTarifas() {
+        try {
+            listaTarifas.setAll(tarifaDAO.listarTodos());
+        } catch (Exception e) {
+            System.out.println("Error cargando tarifas: " + e.getMessage());
+        }
+    }
+
+    private void cargarUsuarios() {
+        try {
+            listaUsuarios.setAll(usuarioDAO.listarTodos());
+        } catch (Exception e) {
+            System.out.println("Error cargando usuarios: " + e.getMessage());
         }
     }
 
@@ -378,11 +469,42 @@ public class PrincipalController {
     @FXML private void mostrarVistaTarifas() { cambiarVista(vistaTarifas, btnNavTarifas); }
     @FXML private void mostrarVistaUsuarios() { cambiarVista(vistaUsuarios, btnNavUsuarios); }
 
-    // --- ACCIONES DE ENVÍOS ---
+    // --- 1. ACCIONES PANEL PRINCIPAL ---
+    @FXML
+    private void entregarOperacionPrincipal() {
+        Operacion op = tblOperaciones.getSelectionModel().getSelectedItem();
+        if (op != null) {
+            op.setEstado(Operacion.ENTREGADO);
+            operacionDAO.actualizar(op);
+            cargarOperaciones();
+        }
+    }
+
+    @FXML
+    private void cancelarOperacionPrincipal() {
+        Operacion op = tblOperaciones.getSelectionModel().getSelectedItem();
+        if (op != null) {
+            op.setEstado(Operacion.CANCELADO);
+            operacionDAO.actualizar(op);
+            cargarOperaciones();
+        }
+    }
+
+    @FXML
+    private void eliminarOperacionPrincipal() {
+        Operacion op = tblOperaciones.getSelectionModel().getSelectedItem();
+        if (op != null) {
+            operacionDAO.eliminar(op.getId());
+            cargarOperaciones();
+            cargarPaquetes();
+        }
+    }
+
+    // --- 2. ACCIONES DE ENVÍOS ---
     @FXML
     private void calcularTarifaEnvio() {
         try {
-            Transportadora t = cmbEnvioTransportadora.getValue();
+            Transportadora t = buscarTransportadoraPorNombre(cmbEnvioTransportadora.getValue());
             BigDecimal peso = new BigDecimal(txtEnvioPeso.getText().trim());
             if (t != null) {
                 Tarifa tarifa = tarifaDAO.buscarTarifaParaPeso(t.getId(), peso);
@@ -391,41 +513,75 @@ public class PrincipalController {
                 } else {
                     mostrarMensaje("Sin tarifa", "No hay tarifa configurada para ese peso; digite el costo manualmente.");
                 }
+            } else {
+                mostrarMensaje("Transportadora requerida", "Seleccione primero una transportadora.");
             }
         } catch (Exception e) {
-            mostrarMensaje("Datos incompletos", "Seleccione una transportadora e ingrese un peso válido.");
+            mostrarMensaje("Peso inválido", "Ingrese un peso numérico válido (ej. 3.5).");
         }
     }
 
     @FXML
     private void guardarEnvio() {
         try {
-            Transportadora t = cmbEnvioTransportadora.getValue();
+            Transportadora t = buscarTransportadoraPorNombre(cmbEnvioTransportadora.getValue());
             BigDecimal peso = new BigDecimal(txtEnvioPeso.getText().trim());
             BigDecimal costo = new BigDecimal(txtEnvioCosto.getText().trim());
 
-            Operacion op = new Operacion();
-            op.setIdTransportadora(t.getId());
-            op.setIdUsuario(obtenerIdUsuarioActual());
-            op.setTipo(Operacion.ENVIO);
-            op.setGuia(txtEnvioGuia.getText().trim());
-            op.setRemitente(txtEnvioRemitente.getText().trim());
-            op.setDestinatario(txtEnvioDestinatario.getText().trim());
-            op.setPeso(peso);
-            op.setCosto(costo);
-            op.setObservaciones(txtEnvioObservaciones.getText().trim());
+            if (envioEditando == null) {
+                Operacion op = new Operacion();
+                op.setIdTransportadora(t.getId());
+                op.setIdUsuario(obtenerIdUsuarioActual());
+                op.setTipo(Operacion.ENVIO);
+                op.setGuia(txtEnvioGuia.getText().trim());
+                op.setRemitente(txtEnvioRemitente.getText().trim());
+                op.setDestinatario(txtEnvioDestinatario.getText().trim());
+                op.setPeso(peso);
+                op.setCosto(costo);
+                op.setObservaciones(txtEnvioObservaciones.getText().trim());
+                operacionDAO.insertar(op);
+            } else {
+                envioEditando.setIdTransportadora(t.getId());
+                envioEditando.setGuia(txtEnvioGuia.getText().trim());
+                envioEditando.setRemitente(txtEnvioRemitente.getText().trim());
+                envioEditando.setDestinatario(txtEnvioDestinatario.getText().trim());
+                envioEditando.setPeso(peso);
+                envioEditando.setCosto(costo);
+                envioEditando.setObservaciones(txtEnvioObservaciones.getText().trim());
+                operacionDAO.actualizar(envioEditando);
+            }
 
-            operacionDAO.insertar(op);
-            txtEnvioGuia.clear();
-            txtEnvioRemitente.clear();
-            txtEnvioDestinatario.clear();
-            txtEnvioPeso.clear();
-            txtEnvioCosto.clear();
-            txtEnvioObservaciones.clear();
-            cargarDatosDesdeDAO();
+            limpiarCamposEnvio();
+            cargarOperaciones();
         } catch (Exception e) {
-            mostrarMensaje("Error al registrar envío", "Verifique todos los campos: " + e.getMessage());
+            mostrarMensaje("Error al guardar envío", "Verifique todos los campos: " + e.getMessage());
         }
+    }
+
+    @FXML
+    private void cargarEnvioSeleccionado() {
+        Operacion op = tblEnvios.getSelectionModel().getSelectedItem();
+        if (op != null) {
+            envioEditando = op;
+            cmbEnvioTransportadora.setValue(obtenerNombreTransportadora(op.getIdTransportadora()));
+            txtEnvioGuia.setText(op.getGuia());
+            txtEnvioRemitente.setText(op.getRemitente());
+            txtEnvioDestinatario.setText(op.getDestinatario());
+            txtEnvioPeso.setText(op.getPeso() != null ? op.getPeso().toPlainString() : "");
+            txtEnvioCosto.setText(op.getCosto() != null ? op.getCosto().toPlainString() : "");
+            txtEnvioObservaciones.setText(op.getObservaciones() != null ? op.getObservaciones() : "");
+        }
+    }
+
+    @FXML
+    private void limpiarCamposEnvio() {
+        envioEditando = null;
+        txtEnvioGuia.clear();
+        txtEnvioRemitente.clear();
+        txtEnvioDestinatario.clear();
+        txtEnvioPeso.clear();
+        txtEnvioCosto.clear();
+        txtEnvioObservaciones.clear();
     }
 
     @FXML
@@ -434,7 +590,17 @@ public class PrincipalController {
         if (op != null) {
             op.setEstado(Operacion.ENTREGADO);
             operacionDAO.actualizar(op);
-            cargarDatosDesdeDAO();
+            cargarOperaciones();
+        }
+    }
+
+    @FXML
+    private void cancelarEnvioSeleccionado() {
+        Operacion op = tblEnvios.getSelectionModel().getSelectedItem();
+        if (op != null) {
+            op.setEstado(Operacion.CANCELADO);
+            operacionDAO.actualizar(op);
+            cargarOperaciones();
         }
     }
 
@@ -443,31 +609,80 @@ public class PrincipalController {
         Operacion op = tblEnvios.getSelectionModel().getSelectedItem();
         if (op != null) {
             operacionDAO.eliminar(op.getId());
-            cargarDatosDesdeDAO();
+            cargarOperaciones();
+            cargarPaquetes();
         }
     }
 
-    // --- ACCIONES DE PAQUETES ---
+    // --- 3. ACCIONES DE PAQUETES ---
     @FXML
     private void guardarPaquete() {
         try {
-            Operacion op = cmbPaqueteOperacion.getValue();
+            Operacion op = buscarOperacionPorTextoCombo(cmbPaqueteOperacion.getValue());
             int cantidad = Integer.parseInt(txtPaqueteCantidad.getText().trim());
 
-            Paquete p = new Paquete();
-            p.setIdOperacion(op.getId());
-            p.setNombreProducto(txtPaqueteProducto.getText().trim());
-            p.setCantidad(cantidad);
-            p.setDescripcion(txtPaqueteDescripcion.getText().trim());
+            if (paqueteEditando == null) {
+                Paquete p = new Paquete();
+                p.setIdOperacion(op.getId());
+                p.setNombreProducto(txtPaqueteProducto.getText().trim());
+                p.setCantidad(cantidad);
+                p.setDescripcion(txtPaqueteDescripcion.getText().trim());
+                paqueteDAO.insertar(p);
+            } else {
+                if (op != null) {
+                    paqueteEditando.setIdOperacion(op.getId());
+                }
+                paqueteEditando.setNombreProducto(txtPaqueteProducto.getText().trim());
+                paqueteEditando.setCantidad(cantidad);
+                paqueteEditando.setDescripcion(txtPaqueteDescripcion.getText().trim());
+                paqueteDAO.actualizar(paqueteEditando);
+            }
 
-            paqueteDAO.insertar(p);
-            txtPaqueteProducto.clear();
-            txtPaqueteCantidad.setText("1");
-            txtPaqueteDescripcion.clear();
-            cargarDatosDesdeDAO();
+            limpiarCamposPaquete();
+            cargarPaquetes();
         } catch (Exception e) {
-            mostrarMensaje("Error al guardar paquete", "Seleccione una operación y complete los datos: " + e.getMessage());
+            mostrarMensaje("Error al guardar paquete", "Seleccione una guía y complete los datos: " + e.getMessage());
         }
+    }
+
+    @FXML
+    private void cargarPaqueteSeleccionado() {
+        Paquete p = tblPaquetes.getSelectionModel().getSelectedItem();
+        if (p != null) {
+            paqueteEditando = p;
+            txtPaqueteProducto.setText(p.getNombreProducto());
+            txtPaqueteCantidad.setText(String.valueOf(p.getCantidad()));
+            txtPaqueteDescripcion.setText(p.getDescripcion() != null ? p.getDescripcion() : "");
+            for (Operacion op : listaOperaciones) {
+                if (op.getId() == p.getIdOperacion()) {
+                    cmbPaqueteOperacion.setValue(formatearOperacionParaCombo(op));
+                    break;
+                }
+            }
+        }
+    }
+
+    @FXML
+    private void limpiarCamposPaquete() {
+        paqueteEditando = null;
+        txtPaqueteProducto.clear();
+        txtPaqueteCantidad.setText("1");
+        txtPaqueteDescripcion.clear();
+    }
+
+    @FXML
+    private void filtrarPaquetesPorGuia() {
+        Operacion op = buscarOperacionPorTextoCombo(cmbPaqueteOperacion.getValue());
+        if (op != null) {
+            listaPaquetes.setAll(paqueteDAO.listarPorOperacion(op.getId()));
+        } else {
+            mostrarMensaje("Seleccione una guía", "Elija primero una guía en el desplegable superior.");
+        }
+    }
+
+    @FXML
+    private void verTodosLosPaquetes() {
+        cargarPaquetes();
     }
 
     @FXML
@@ -475,34 +690,62 @@ public class PrincipalController {
         Paquete p = tblPaquetes.getSelectionModel().getSelectedItem();
         if (p != null) {
             paqueteDAO.eliminar(p.getId());
-            cargarDatosDesdeDAO();
+            cargarPaquetes();
         }
     }
 
-    // --- ACCIONES DE RECEPCIÓN Y ENTREGA ---
+    // --- 4. ACCIONES DE RECEPCIÓN Y ENTREGA ---
     @FXML
     private void guardarRecepcion() {
         try {
-            Transportadora t = cmbRecepcionTransportadora.getValue();
+            Transportadora t = buscarTransportadoraPorNombre(cmbRecepcionTransportadora.getValue());
 
-            Operacion op = new Operacion();
-            op.setIdTransportadora(t.getId());
-            op.setIdUsuario(obtenerIdUsuarioActual());
-            op.setTipo(Operacion.RECEPCION);
-            op.setGuia(txtRecepcionGuia.getText().trim());
-            op.setRemitente(txtRecepcionRemitente.getText().trim());
-            op.setDestinatario(txtRecepcionDestinatario.getText().trim());
-            op.setObservaciones(txtRecepcionObservaciones.getText().trim());
+            if (recepcionEditando == null) {
+                Operacion op = new Operacion();
+                op.setIdTransportadora(t.getId());
+                op.setIdUsuario(obtenerIdUsuarioActual());
+                op.setTipo(Operacion.RECEPCION);
+                op.setGuia(txtRecepcionGuia.getText().trim());
+                op.setRemitente(txtRecepcionRemitente.getText().trim());
+                op.setDestinatario(txtRecepcionDestinatario.getText().trim());
+                op.setObservaciones(txtRecepcionObservaciones.getText().trim());
+                operacionDAO.insertar(op);
+            } else {
+                recepcionEditando.setIdTransportadora(t.getId());
+                recepcionEditando.setGuia(txtRecepcionGuia.getText().trim());
+                recepcionEditando.setRemitente(txtRecepcionRemitente.getText().trim());
+                recepcionEditando.setDestinatario(txtRecepcionDestinatario.getText().trim());
+                recepcionEditando.setObservaciones(txtRecepcionObservaciones.getText().trim());
+                operacionDAO.actualizar(recepcionEditando);
+            }
 
-            operacionDAO.insertar(op);
-            txtRecepcionGuia.clear();
-            txtRecepcionRemitente.clear();
-            txtRecepcionDestinatario.clear();
-            txtRecepcionObservaciones.clear();
-            cargarDatosDesdeDAO();
+            limpiarCamposRecepcion();
+            cargarOperaciones();
         } catch (Exception e) {
-            mostrarMensaje("Error al registrar recepción", "Verifique los datos: " + e.getMessage());
+            mostrarMensaje("Error al guardar recepción", "Verifique los datos: " + e.getMessage());
         }
+    }
+
+    @FXML
+    private void cargarRecepcionSeleccionada() {
+        Operacion op = tblRecepciones.getSelectionModel().getSelectedItem();
+        if (op != null) {
+            recepcionEditando = op;
+            cmbRecepcionTransportadora.setValue(obtenerNombreTransportadora(op.getIdTransportadora()));
+            txtRecepcionGuia.setText(op.getGuia());
+            txtRecepcionRemitente.setText(op.getRemitente());
+            txtRecepcionDestinatario.setText(op.getDestinatario());
+            txtRecepcionObservaciones.setText(op.getObservaciones() != null ? op.getObservaciones() : "");
+        }
+    }
+
+    @FXML
+    private void limpiarCamposRecepcion() {
+        recepcionEditando = null;
+        txtRecepcionGuia.clear();
+        txtRecepcionRemitente.clear();
+        txtRecepcionDestinatario.clear();
+        txtRecepcionObservaciones.clear();
     }
 
     @FXML
@@ -511,7 +754,7 @@ public class PrincipalController {
         if (op != null) {
             op.setEstado(Operacion.ENTREGADO);
             operacionDAO.actualizar(op);
-            cargarDatosDesdeDAO();
+            cargarOperaciones();
         }
     }
 
@@ -521,7 +764,7 @@ public class PrincipalController {
         if (op != null) {
             op.setEstado(Operacion.CANCELADO);
             operacionDAO.actualizar(op);
-            cargarDatosDesdeDAO();
+            cargarOperaciones();
         }
     }
 
@@ -530,31 +773,61 @@ public class PrincipalController {
         Operacion op = tblRecepciones.getSelectionModel().getSelectedItem();
         if (op != null) {
             operacionDAO.eliminar(op.getId());
-            cargarDatosDesdeDAO();
+            cargarOperaciones();
+            cargarPaquetes();
         }
     }
 
-    // --- ACCIONES DE TRANSPORTADORAS Y TARIFAS ---
+    // --- 5. ACCIONES DE TRANSPORTADORAS Y TARIFAS ---
     @FXML
     private void guardarTransportadora() {
         try {
-            Transportadora t = new Transportadora();
-            t.setNombre(txtTransNombre.getText().trim());
-            t.setNit(txtTransNit.getText().trim());
-            t.setTelefonoContacto(txtTransTelefono.getText().trim());
-            t.setDireccion(txtTransDireccion.getText().trim());
-            t.setTipoServicio(cmbTransServicio.getValue());
-            t.setActivo(true);
+            if (transportadoraEditando == null) {
+                Transportadora t = new Transportadora();
+                t.setNombre(txtTransNombre.getText().trim());
+                t.setNit(txtTransNit.getText().trim());
+                t.setTelefonoContacto(txtTransTelefono.getText().trim());
+                t.setDireccion(txtTransDireccion.getText().trim());
+                t.setTipoServicio(cmbTransServicio.getValue());
+                t.setActivo(true);
+                transportadoraDAO.insertar(t);
+            } else {
+                transportadoraEditando.setNombre(txtTransNombre.getText().trim());
+                transportadoraEditando.setNit(txtTransNit.getText().trim());
+                transportadoraEditando.setTelefonoContacto(txtTransTelefono.getText().trim());
+                transportadoraEditando.setDireccion(txtTransDireccion.getText().trim());
+                transportadoraEditando.setTipoServicio(cmbTransServicio.getValue());
+                transportadoraDAO.actualizar(transportadoraEditando);
+            }
 
-            transportadoraDAO.insertar(t);
-            txtTransNombre.clear();
-            txtTransNit.clear();
-            txtTransTelefono.clear();
-            txtTransDireccion.clear();
-            cargarDatosDesdeDAO();
+            limpiarCamposTransportadora();
+            cargarTransportadoras();
         } catch (Exception e) {
             mostrarMensaje("Error al guardar transportadora", e.getMessage());
         }
+    }
+
+    @FXML
+    private void cargarTransportadoraSeleccionada() {
+        Transportadora t = tblTransportadoras.getSelectionModel().getSelectedItem();
+        if (t != null) {
+            transportadoraEditando = t;
+            txtTransNombre.setText(t.getNombre());
+            txtTransNit.setText(t.getNit() != null ? t.getNit() : "");
+            txtTransTelefono.setText(t.getTelefonoContacto() != null ? t.getTelefonoContacto() : "");
+            txtTransDireccion.setText(t.getDireccion() != null ? t.getDireccion() : "");
+            cmbTransServicio.setValue(t.getTipoServicio());
+        }
+    }
+
+    @FXML
+    private void limpiarCamposTransportadora() {
+        transportadoraEditando = null;
+        txtTransNombre.clear();
+        txtTransNit.clear();
+        txtTransTelefono.clear();
+        txtTransDireccion.clear();
+        cmbTransServicio.setValue(Transportadora.SERVICIO_AMBOS);
     }
 
     @FXML
@@ -563,7 +836,7 @@ public class PrincipalController {
         if (t != null) {
             try {
                 transportadoraDAO.eliminar(t.getId());
-                cargarDatosDesdeDAO();
+                cargarTransportadoras();
             } catch (Exception e) {
                 mostrarMensaje("No se puede eliminar", "Esta transportadora ya tiene operaciones asociadas.");
             }
@@ -573,21 +846,48 @@ public class PrincipalController {
     @FXML
     private void guardarTarifa() {
         try {
-            Transportadora t = cmbTarifaTransportadora.getValue();
-            Tarifa tarifa = new Tarifa();
-            tarifa.setIdTransportadora(t.getId());
-            tarifa.setPesoMin(new BigDecimal(txtTarifaPesoMin.getText().trim()));
-            tarifa.setPesoMax(new BigDecimal(txtTarifaPesoMax.getText().trim()));
-            tarifa.setValor(new BigDecimal(txtTarifaValor.getText().trim()));
+            Transportadora t = buscarTransportadoraPorNombre(cmbTarifaTransportadora.getValue());
 
-            tarifaDAO.insertar(tarifa);
-            txtTarifaPesoMin.clear();
-            txtTarifaPesoMax.clear();
-            txtTarifaValor.clear();
-            cargarDatosDesdeDAO();
+            if (tarifaEditando == null) {
+                Tarifa tarifa = new Tarifa();
+                tarifa.setIdTransportadora(t.getId());
+                tarifa.setPesoMin(new BigDecimal(txtTarifaPesoMin.getText().trim()));
+                tarifa.setPesoMax(new BigDecimal(txtTarifaPesoMax.getText().trim()));
+                tarifa.setValor(new BigDecimal(txtTarifaValor.getText().trim()));
+                tarifaDAO.insertar(tarifa);
+            } else {
+                tarifaEditando.setIdTransportadora(t.getId());
+                tarifaEditando.setPesoMin(new BigDecimal(txtTarifaPesoMin.getText().trim()));
+                tarifaEditando.setPesoMax(new BigDecimal(txtTarifaPesoMax.getText().trim()));
+                tarifaEditando.setValor(new BigDecimal(txtTarifaValor.getText().trim()));
+                tarifaDAO.actualizar(tarifaEditando);
+            }
+
+            limpiarCamposTarifa();
+            cargarTarifas();
         } catch (Exception e) {
             mostrarMensaje("Error al guardar tarifa", e.getMessage());
         }
+    }
+
+    @FXML
+    private void cargarTarifaSeleccionada() {
+        Tarifa t = tblTarifas.getSelectionModel().getSelectedItem();
+        if (t != null) {
+            tarifaEditando = t;
+            cmbTarifaTransportadora.setValue(obtenerNombreTransportadora(t.getIdTransportadora()));
+            txtTarifaPesoMin.setText(t.getPesoMin().toPlainString());
+            txtTarifaPesoMax.setText(t.getPesoMax().toPlainString());
+            txtTarifaValor.setText(t.getValor().toPlainString());
+        }
+    }
+
+    @FXML
+    private void limpiarCamposTarifa() {
+        tarifaEditando = null;
+        txtTarifaPesoMin.clear();
+        txtTarifaPesoMax.clear();
+        txtTarifaValor.clear();
     }
 
     @FXML
@@ -595,33 +895,64 @@ public class PrincipalController {
         Tarifa t = tblTarifas.getSelectionModel().getSelectedItem();
         if (t != null) {
             tarifaDAO.eliminar(t.getId());
-            cargarDatosDesdeDAO();
+            cargarTarifas();
         }
     }
 
-    // --- ACCIONES DE USUARIOS ---
+    // --- 6. ACCIONES DE USUARIOS ---
     @FXML
     private void guardarUsuario() {
         try {
-            Usuario u = new Usuario();
-            u.setNombre(txtUsuNombre.getText().trim());
-            u.setLogin(txtUsuLogin.getText().trim());
-            u.setContrasena(txtUsuContrasena.getText());
-            u.setTelefono(txtUsuTelefono.getText().trim());
-            u.setEmail(txtUsuEmail.getText().trim());
-            u.setRol(cmbUsuRol.getValue());
-            u.setActivo(true);
+            if (usuarioEditando == null) {
+                Usuario u = new Usuario();
+                u.setNombre(txtUsuNombre.getText().trim());
+                u.setLogin(txtUsuLogin.getText().trim());
+                u.setContrasena(txtUsuContrasena.getText());
+                u.setTelefono(txtUsuTelefono.getText().trim());
+                u.setEmail(txtUsuEmail.getText().trim());
+                u.setRol(cmbUsuRol.getValue());
+                u.setActivo(true);
+                usuarioDAO.insertar(u);
+            } else {
+                usuarioEditando.setNombre(txtUsuNombre.getText().trim());
+                usuarioEditando.setLogin(txtUsuLogin.getText().trim());
+                usuarioEditando.setContrasena(txtUsuContrasena.getText());
+                usuarioEditando.setTelefono(txtUsuTelefono.getText().trim());
+                usuarioEditando.setEmail(txtUsuEmail.getText().trim());
+                usuarioEditando.setRol(cmbUsuRol.getValue());
+                usuarioDAO.actualizar(usuarioEditando);
+            }
 
-            usuarioDAO.insertar(u);
-            txtUsuNombre.clear();
-            txtUsuLogin.clear();
-            txtUsuContrasena.clear();
-            txtUsuTelefono.clear();
-            txtUsuEmail.clear();
-            cargarDatosDesdeDAO();
+            limpiarCamposUsuario();
+            cargarUsuarios();
         } catch (Exception e) {
             mostrarMensaje("Error al guardar usuario", e.getMessage());
         }
+    }
+
+    @FXML
+    private void cargarUsuarioSeleccionado() {
+        Usuario u = tblUsuarios.getSelectionModel().getSelectedItem();
+        if (u != null) {
+            usuarioEditando = u;
+            txtUsuNombre.setText(u.getNombre());
+            txtUsuLogin.setText(u.getLogin());
+            txtUsuContrasena.setText(u.getContrasena());
+            txtUsuTelefono.setText(u.getTelefono() != null ? u.getTelefono() : "");
+            txtUsuEmail.setText(u.getEmail() != null ? u.getEmail() : "");
+            cmbUsuRol.setValue(u.getRol());
+        }
+    }
+
+    @FXML
+    private void limpiarCamposUsuario() {
+        usuarioEditando = null;
+        txtUsuNombre.clear();
+        txtUsuLogin.clear();
+        txtUsuContrasena.clear();
+        txtUsuTelefono.clear();
+        txtUsuEmail.clear();
+        cmbUsuRol.setValue(Usuario.OPERADOR);
     }
 
     @FXML
@@ -630,7 +961,7 @@ public class PrincipalController {
         if (u != null) {
             u.setActivo(!u.isActivo());
             usuarioDAO.actualizar(u);
-            cargarDatosDesdeDAO();
+            cargarUsuarios();
         }
     }
 
@@ -640,11 +971,56 @@ public class PrincipalController {
         if (u != null) {
             try {
                 usuarioDAO.eliminar(u.getId());
-                cargarDatosDesdeDAO();
+                cargarUsuarios();
             } catch (Exception e) {
                 mostrarMensaje("No se puede eliminar", "El usuario tiene historial de operaciones; puede desactivarlo.");
             }
         }
+    }
+
+    // --- MÉTODOS AUXILIARES BÁSICOS (POO) ---
+    private String formatearOperacionParaCombo(Operacion op) {
+        String guia = op.getGuia() != null ? op.getGuia().trim() : "";
+        String destinatario = op.getDestinatario() != null ? op.getDestinatario().trim() : "";
+        if (guia.toUpperCase().startsWith("DEMO-") || guia.toUpperCase().contains("DEMO")) {
+            return op.getTipo() + " - (" + destinatario + ")";
+        } else {
+            return "Guía " + guia + " - (" + destinatario + ")";
+        }
+    }
+
+    private Operacion buscarOperacionPorTextoCombo(String textoCombo) {
+        if (textoCombo == null) return null;
+        for (Operacion op : listaOperaciones) {
+            if (formatearOperacionParaCombo(op).equals(textoCombo)) {
+                return op;
+            }
+        }
+        return null;
+    }
+
+    private Transportadora buscarTransportadoraPorNombre(String nombre) {
+        if (nombre == null) return null;
+        for (Transportadora t : listaTransportadoras) {
+            if (t.getNombre().equals(nombre)) {
+                return t;
+            }
+        }
+        return null;
+    }
+
+    private String obtenerNombreTransportadora(int idTransportadora) {
+        for (Transportadora t : listaTransportadoras) {
+            if (t.getId() == idTransportadora) {
+                return t.getNombre();
+            }
+        }
+        return "";
+    }
+
+    private int obtenerIdUsuarioActual() {
+        Usuario u = SesionActual.getInstancia().getUsuarioLogueado();
+        return (u != null && u.getId() > 0) ? u.getId() : 1;
     }
 
     // --- EVENTOS DE VENTANA Y SESIÓN ---
@@ -694,11 +1070,6 @@ public class PrincipalController {
                 e.printStackTrace();
             }
         }
-    }
-
-    private int obtenerIdUsuarioActual() {
-        Usuario u = SesionActual.getInstancia().getUsuarioLogueado();
-        return (u != null && u.getId() > 0) ? u.getId() : 1;
     }
 
     private void mostrarMensaje(String titulo, String texto) {
